@@ -31,7 +31,15 @@ class ProductControllerTest extends TestCase
 
         //Then
             // product exists
-        $response->assertStatus(201);
+        $response->assertJsonStructure([
+            'id', 'name', 'slug', 'price', 'created_at'
+        ])
+        ->assertJson([
+            'name' => $name,
+            'slug' => str_slug($name),
+            'price' => $price
+        ])
+        ->assertStatus(201);
 
         $this->assertDatabaseHas('products', [
             'name' => $name,
