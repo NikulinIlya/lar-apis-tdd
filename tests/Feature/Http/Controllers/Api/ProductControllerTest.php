@@ -49,6 +49,16 @@ class ProductControllerTest extends TestCase
     /**
      * @test
      */
+    public function willFailWith404IfProductIsNotFound()
+    {
+        $response = $this->json('GET', 'api/products/-1');
+
+        $response->assertStatus(404);
+    }
+
+    /**
+     * @test
+     */
     public function canReturnProduct()
     {
         // Given
