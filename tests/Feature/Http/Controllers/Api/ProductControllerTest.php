@@ -121,4 +121,29 @@ class ProductControllerTest extends TestCase
             'updated_at' => (string)$product->updated_at,
         ]);
     }
+
+    /**
+     * @test
+     */
+    public function willFailWith404IfProductToDeleteIsNotFound()
+    {
+        $response = $this->json('DELETE', 'api/products/-1');
+
+        $response->assertStatus(404);
+    }
+
+    /**
+     * @test
+     */
+    public function canDeleteProduct()
+    {
+        $product = $this->create('Product');
+
+        $response = $this->json('DELETE', "api/products/$product->id");
+
+        $response->assertStatus(204)
+            ->assertSee(null);
+
+        $this->assertDatabaseMissing('products', ['id' => $product->id]);
+    }
 }
