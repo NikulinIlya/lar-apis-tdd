@@ -10,8 +10,6 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 class ProductControllerTest extends TestCase
 {
     /**
-     * A basic test example.
-     *
      * @test
      */
     public function canCreateProduct()
@@ -46,6 +44,27 @@ class ProductControllerTest extends TestCase
             'slug' => str_slug($name),
             'price' => $price
         ]);
+    }
 
+    /**
+     * @test
+     */
+    public function canReturnProduct()
+    {
+        // Given
+        $product = $this->create('Product');
+
+        // When
+        $response = $this->json('GET', "api/products/$product->id");
+
+        // Then
+        $response->assertStatus(200)
+        ->assertExactJson([
+            'id' => $product->id,
+            'name' => $product->name,
+            'slug' => $product->slug,
+            'price' => $product->price,
+            'created_at' => (string)$product->created_at
+        ]);
     }
 }
