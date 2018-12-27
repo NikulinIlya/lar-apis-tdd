@@ -22,7 +22,20 @@ class ProductController extends Controller
 
     public function show(int $id)
     {
-        $product = Product::findOrfail($id);
+        $product = Product::findOrFail($id);
+
+        return response()->json(new ProductResource($product));
+    }
+
+    public function update(Request $request, int $id)
+    {
+        $product = Product::findOrFail($id);
+
+        $product->update([
+            'name' => $request->name,
+            'slug' => str_slug($request->name),
+            'price' => $request->price
+        ]);
 
         return response()->json(new ProductResource($product));
     }

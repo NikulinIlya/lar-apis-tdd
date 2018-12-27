@@ -79,4 +79,46 @@ class ProductControllerTest extends TestCase
             'created_at' => (string)$product->created_at
         ]);
     }
+
+    /**
+     * @test
+     */
+    public function willFailWith404IfProductToUpdateIsNotFound()
+    {
+        $response = $this->json('PUT', 'api/products/-1');
+
+        $response->assertStatus(404);
+    }
+
+    /**
+     * @test
+     */
+    public function canUpdateProduct()
+    {
+        $product = $this->create('Product');
+
+        $response = $this->json('PUT', "api/products/$product->id", [
+            'name' => $product->name.'_updated',
+            'slug' => str_slug($product->name.'_updated'),
+            'price' => $product->price + 10
+        ]);
+
+        $response->assertStatus(200)
+        ->assertExactJson([
+            'id' => $product->id,
+            'name' => $product->name.'_updated',
+            'slug' => str_slug($product->name.'_updated'),
+            'price' => $product->price + 10,
+            'created_at' => (string)$product->created_at
+        ]);
+
+        $this->assertDatabaseHas('products', [
+            'id' => $product->id,
+            'name' => $product->name.'_updated',
+            'slug' => str_slug($product->name.'_updated'),
+            'price' => $product->price + 10,
+            'created_at' => (string)$product->created_at,
+            'updated_at' => (string)$product->updated_at,
+        ]);
+    }
 }
