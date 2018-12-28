@@ -14,6 +14,31 @@ class ProductControllerTest extends TestCase
     /**
      * @test
      */
+    public function canReturnPaginatedProductsCollection()
+    {
+        $product1 = $this->create('Product');
+        $product2 = $this->create('Product');
+        $product3 = $this->create('Product');
+
+        $response = $this->json('GET', '/api/products');
+
+        $response->assertStatus(200)
+        ->assertJsonStructure([
+            'data' => [
+                '*' => ['id', 'name', 'slug', 'price', 'created_at']
+            ],
+
+            'links' => ['first', 'last', 'prev', 'next'],
+            'meta' => [
+                'current_page', 'last_page', 'from', 'to', 'path', 'per_page', 'total'
+            ]
+        ]);
+    }
+
+
+    /**
+     * @test
+     */
     public function canCreateProduct()
     {
         //Given
