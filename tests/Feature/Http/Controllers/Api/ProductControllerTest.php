@@ -14,6 +14,27 @@ class ProductControllerTest extends TestCase
     /**
      * @test
      */
+    public function nonAuthenticatedUsersCannotAccessFollowingEndpointsProductApi()
+    {
+        $index = $this->json('GET', '/api/products');
+        $index->assertStatus(401);
+
+        $store = $this->json('POST', '/api/products');
+        $store->assertStatus(401);
+
+        $show = $this->json('GET', '/api/products/-1');
+        $show->assertStatus(401);
+
+        $update = $this->json('PUT', '/api/products/-1');
+        $update->assertStatus(401);
+
+        $destroy = $this->json('DELETE', '/api/products/-1');
+        $destroy->assertStatus(401);
+    }
+
+    /**
+     * @test
+     */
     public function canReturnPaginatedProductsCollection()
     {
         $product1 = $this->create('Product');
