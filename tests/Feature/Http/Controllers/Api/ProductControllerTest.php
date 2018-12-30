@@ -20,7 +20,7 @@ class ProductControllerTest extends TestCase
         $product2 = $this->create('Product');
         $product3 = $this->create('Product');
 
-        $response = $this->json('GET', '/api/products');
+        $response = $this->actingAs($this->create('User', [], false), 'api')->json('GET', '/api/products');
 
         $response->assertStatus(200)
         ->assertJsonStructure([
@@ -48,7 +48,7 @@ class ProductControllerTest extends TestCase
             // post request create product
         $faker = Factory::create();
 
-        $response = $this->json('POST', '/api/products', [
+        $response = $this->actingAs($this->create('User', [], false), 'api')->json('POST', '/api/products', [
             'name' => $name = $faker->company,
             'slug' => str_slug($name),
             'price' => $price = random_int(10, 100)
@@ -78,7 +78,7 @@ class ProductControllerTest extends TestCase
      */
     public function willFailWith404IfProductIsNotFound()
     {
-        $response = $this->json('GET', 'api/products/-1');
+        $response = $this->actingAs($this->create('User', [], false), 'api')->json('GET', 'api/products/-1');
 
         $response->assertStatus(404);
     }
@@ -92,7 +92,7 @@ class ProductControllerTest extends TestCase
         $product = $this->create('Product');
 
         // When
-        $response = $this->json('GET', "api/products/$product->id");
+        $response = $this->actingAs($this->create('User', [], false), 'api')->json('GET', "api/products/$product->id");
 
         // Then
         $response->assertStatus(200)
@@ -110,7 +110,7 @@ class ProductControllerTest extends TestCase
      */
     public function willFailWith404IfProductToUpdateIsNotFound()
     {
-        $response = $this->json('PUT', 'api/products/-1');
+        $response = $this->actingAs($this->create('User', [], false), 'api')->json('PUT', 'api/products/-1');
 
         $response->assertStatus(404);
     }
@@ -122,7 +122,7 @@ class ProductControllerTest extends TestCase
     {
         $product = $this->create('Product');
 
-        $response = $this->json('PUT', "api/products/$product->id", [
+        $response = $this->actingAs($this->create('User', [], false), 'api')->json('PUT', "api/products/$product->id", [
             'name' => $product->name.'_updated',
             'slug' => str_slug($product->name.'_updated'),
             'price' => $product->price + 10
@@ -152,7 +152,7 @@ class ProductControllerTest extends TestCase
      */
     public function willFailWith404IfProductToDeleteIsNotFound()
     {
-        $response = $this->json('DELETE', 'api/products/-1');
+        $response = $this->actingAs($this->create('User', [], false), 'api')->json('DELETE', 'api/products/-1');
 
         $response->assertStatus(404);
     }
@@ -164,7 +164,7 @@ class ProductControllerTest extends TestCase
     {
         $product = $this->create('Product');
 
-        $response = $this->json('DELETE', "api/products/$product->id");
+        $response = $this->actingAs($this->create('User', [], false), 'api')->json('DELETE', "api/products/$product->id");
 
         $response->assertStatus(204)
             ->assertSee(null);
