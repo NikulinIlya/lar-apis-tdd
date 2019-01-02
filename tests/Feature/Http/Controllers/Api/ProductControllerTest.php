@@ -56,6 +56,61 @@ class ProductControllerTest extends TestCase
         ]);
     }
 
+    /**
+     * @test
+     */
+    public function willFailWithValidationErrorsWhenCreatingProductWithWrongInputs()
+    {
+        $product = $this->create('Product');
+
+        $response = $this->actingAs($this->create('User', [], false), 'api')->json('POST', '/api/products', [
+            'name' => $product->name,
+            'price' => 'aaa'
+        ]);
+
+        $response->assertStatus(422)
+            ->assertExactJson([
+                'message' => 'The given data was invalid.',
+                'errors' => [
+                    'price' => [
+                        'The price must be an integer.'
+                    ],
+                    'name' => [
+                        'The name has already been taken.'
+                    ]
+                ]
+            ]);
+
+        $response = $this->actingAs($this->create('User', [], false), 'api')->json('POST', '/api/products', [
+            'name' => '',
+            'price' => 100
+        ]);
+
+        $response->assertStatus(422)
+            ->assertExactJson([
+                'message' => 'The given data was invalid.',
+                'errors' => [
+                    'name' => [
+                        'The name field is required.'
+                    ]
+                ]
+            ]);
+
+        $response = $this->actingAs($this->create('User', [], false), 'api')->json('POST', '/api/products', [
+            'name' => str_random(65),
+            'price' => 100
+        ]);
+
+        $response->assertStatus(422)
+            ->assertExactJson([
+                'message' => 'The given data was invalid.',
+                'errors' => [
+                    'name' => [
+                        'The name may not be greater than 64 characters.'
+                    ]
+                ]
+            ]);
+    }
 
     /**
      * @test
