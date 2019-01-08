@@ -115,6 +115,60 @@ class ProductControllerTest extends TestCase
     /**
      * @test
      */
+    public function willFailWithValidationErrorsWhenUpdatingProductWithWrongInputs()
+    {
+        $productOne = $this->create('Product');
+        $productTwo = $this->create('Product');
+
+        $response = $this->actingAs($this->create('User', [], false), 'api')->json('PUT', "/api/products/$productTwo->id", ['name' => $productOne->name, 'price' => 'aaa']);
+
+        $response->assertStatus(422)
+        ->assertExactJson([
+            'message' => 'The given data was invalid.',
+            'errors' => [
+                'price' => [
+                    'The price must be an integer.'
+                ],
+                'name' => [
+                    'The name has already been taken.'
+                ]
+            ]
+        ]);
+
+        $response = $this->actingAs($this->create('User', [], false), 'api')->json('PUT', "/api/products/$productTwo->id", ['name' => '', 'price' => 100]);
+
+        $response->assertStatus(422)
+            ->assertExactJson([
+                'message' => 'The given data was invalid.',
+                'errors' => [
+                    'name' => [
+                        'The name field is required.'
+                    ]
+                ]
+            ]);
+
+        $response = $this->actingAs($this->create('User', [], false), 'api')->json('PUT', "/api/products/$productTwo->id", ['name' => str_random(65), 'price' => 100]);
+
+        $response->assertStatus(422)
+            ->assertExactJson([
+                'message' => 'The given data was invalid.',
+                'errors' => [
+                    'name' => [
+                        'The name may not be greater than 64 characters.'
+                    ]
+                ]
+            ]);
+
+        $productThree = $this->create('Product');
+
+        $response = $this->actingAs($this->create('User', [], false), 'api')->json('PUT', "/api/products/$productThree->id", ['name' => $productThree->name, 'price' => 100]);
+
+        $response->assertStatus(200);
+    }
+
+    /**
+     * @test
+     */
     public function canCreateProduct()
     {
         //Given
@@ -186,7 +240,9 @@ class ProductControllerTest extends TestCase
      */
     public function willFailWith404IfProductToUpdateIsNotFound()
     {
-        $response = $this->actingAs($this->create('User', [], false), 'api')->json('PUT', 'api/products/-1');
+        $response = $this->actingAs($this->create('User', [], false), 'api')->json('PUT', 'api/products/-1', [
+            'name' => 'test'
+        ]);
 
         $response->assertStatus(404);
     }
