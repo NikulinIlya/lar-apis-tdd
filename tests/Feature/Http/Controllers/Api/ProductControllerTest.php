@@ -3,6 +3,8 @@
 namespace Tests\Feature\Http\Controllers\Api;
 
 use Faker\Factory;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -171,23 +173,23 @@ class ProductControllerTest extends TestCase
      */
     public function canCreateProduct()
     {
-        //Given
-            // user is authenticated
-
-        //When
-            // post request create product
         $faker = Factory::create();
+
+        Storage::fake('public');
+
+        $image = UploadedFile::fake()->image('image.jpg');
 
         $response = $this->actingAs($this->create('User', [], false), 'api')->json('POST', '/api/products', [
             'name' => $name = $faker->company,
             'slug' => str_slug($name),
-            'price' => $price = random_int(10, 100)
+            'price' => $price = random_int(10, 100),
+            'image' => $image
         ]);
 
         //Then
             // product exists
         $response->assertJsonStructure([
-            'id', 'name', 'slug', 'price', 'created_at'
+            'id', 'image_id', 'name', 'slug', 'price', 'created_at'
         ])
         ->assertJson([
             'name' => $name,
@@ -195,6 +197,8 @@ class ProductControllerTest extends TestCase
             'price' => $price
         ])
         ->assertStatus(201);
+
+        Storage::disk('public')->assertExists("product_images/{$image->hashName()}");
 
         $this->assertDatabaseHas('products', [
             'name' => $name,
@@ -228,6 +232,7 @@ class ProductControllerTest extends TestCase
         $response->assertStatus(200)
         ->assertExactJson([
             'id' => $product->id,
+            'image_id' => null,
             'name' => $product->name,
             'slug' => $product->slug,
             'price' => $product->price,
