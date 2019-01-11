@@ -175,15 +175,10 @@ class ProductControllerTest extends TestCase
     {
         $faker = Factory::create();
 
-        Storage::fake('public');
-
-        $image = UploadedFile::fake()->image('image.jpg');
-
         $response = $this->actingAs($this->create('User', [], false), 'api')->json('POST', '/api/products', [
             'name' => $name = $faker->company,
             'slug' => str_slug($name),
-            'price' => $price = random_int(10, 100),
-            'image' => $image
+            'price' => $price = random_int(10, 100)
         ]);
 
         //Then
@@ -197,6 +192,43 @@ class ProductControllerTest extends TestCase
             'price' => $price
         ])
         ->assertStatus(201);
+
+        $this->assertDatabaseHas('products', [
+            'name' => $name,
+            'slug' => str_slug($name),
+            'price' => $price
+        ]);
+    }
+
+    /**
+     * @test
+     */
+    public function canCreateProductWithImage()
+    {
+        $faker = Factory::create();
+
+        Storage::fake('public');
+
+        $image = UploadedFile::fake()->image('image.jpg');
+
+        $response = $this->actingAs($this->create('User', [], false), 'api')->json('POST', '/api/products', [
+            'name' => $name = $faker->company,
+            'slug' => str_slug($name),
+            'price' => $price = random_int(10, 100),
+            'image' => $image
+        ]);
+
+        //Then
+        // product exists
+        $response->assertJsonStructure([
+            'id', 'image_id', 'name', 'slug', 'price', 'created_at'
+        ])
+            ->assertJson([
+                'name' => $name,
+                'slug' => str_slug($name),
+                'price' => $price
+            ])
+            ->assertStatus(201);
 
         Storage::disk('public')->assertExists("product_images/{$image->hashName()}");
 
