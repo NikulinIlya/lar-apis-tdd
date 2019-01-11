@@ -300,6 +300,7 @@ class ProductControllerTest extends TestCase
         $response->assertStatus(200)
         ->assertExactJson([
             'id' => $product->id,
+            'image_id' => null,
             'name' => $product->name.'_updated',
             'slug' => str_slug($product->name.'_updated'),
             'price' => $product->price + 10,
@@ -308,6 +309,46 @@ class ProductControllerTest extends TestCase
 
         $this->assertDatabaseHas('products', [
             'id' => $product->id,
+            'image_id' => null,
+            'name' => $product->name.'_updated',
+            'slug' => str_slug($product->name.'_updated'),
+            'price' => $product->price + 10,
+            'created_at' => (string)$product->created_at,
+            'updated_at' => (string)$product->updated_at,
+        ]);
+    }
+
+    /**
+     * @test
+     */
+    public function canUpdateProductWithImage()
+    {
+        $product = $this->create('Product');
+
+        Storage::fake('public');
+
+        $image = UploadedFile::fake()->image('image.jpg');
+
+        $response = $this->actingAs($this->create('User', [], false), 'api')->json('PUT', "api/products/$product->id", [
+            'name' => $product->name.'_updated',
+            'slug' => str_slug($product->name.'_updated'),
+            'price' => $product->price + 10,
+            'image' => $image
+        ]);
+
+        $response->assertStatus(200)
+            ->assertExactJson([
+                'id' => $product->id,
+                'image_id' => json_decode($response->getContent())->image_id,
+                'name' => $product->name.'_updated',
+                'slug' => str_slug($product->name.'_updated'),
+                'price' => $product->price + 10,
+                'created_at' => (string)$product->created_at
+            ]);
+
+        $this->assertDatabaseHas('products', [
+            'id' => $product->id,
+            'image_id' => json_decode($response->getContent())->image_id,
             'name' => $product->name.'_updated',
             'slug' => str_slug($product->name.'_updated'),
             'price' => $product->price + 10,
