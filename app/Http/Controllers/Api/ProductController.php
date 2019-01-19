@@ -9,9 +9,17 @@ use App\Image;
 use App\Product;
 use App\Http\Resources\Product as ProductResource;
 use App\Http\Resources\ProductCollection;
+use App\Utopia\Repositories\Interfaces\ProductRepoInterface;
 
 class ProductController extends Controller
 {
+    protected $productRepo;
+
+    public function __construct(ProductRepoInterface $productRepo)
+    {
+        $this->productRepo = $productRepo;
+    }
+
     public function index()
     {
         return new ProductCollection(Product::paginate());
@@ -19,19 +27,7 @@ class ProductController extends Controller
 
     public function store(ProductStoreRequest $request)
     {
-        if($request->hasFile('image')) {
-            $path = $request->file('image')->store('product_images', 'public');
-            $imageId = Image::create([
-                'path' => $path
-            ])->id;
-        } else $imageId = null;
-
-        $product = Product::create([
-            'image_id' => $imageId,
-            'name' => $request->name,
-            'slug' => str_slug($request->name),
-            'price' => $request->price
-        ]);
+        $product = $this->productRepo->create($request);
 
         return response()->json(new ProductResource($product), 201);
     }
@@ -47,19 +43,7 @@ class ProductController extends Controller
     {
         $product = Product::findOrFail($id);
 
-        if($request->hasFile('image')) {
-            $path = $request->file('image')->store('product_images', 'public');
-            $imageId = Image::create([
-                'path' => $path
-            ])->id;
-        } else $imageId = $product->image_id;
-
-        $product->update([
-            'image_id' => $imageId,
-            'name' => $request->name,
-            'slug' => str_slug($request->name),
-            'price' => $request->price
-        ]);
+        $product = $this->productRepo->update($request, $product);
 
         return response()->json(new ProductResource($product));
     }
@@ -68,7 +52,7 @@ class ProductController extends Controller
     {
         $product = Product::findOrFail($id);
 
-        $product->delete();
+        $this->productRepo->delete($product);
 
         return response()->json(null, 204);
     }
