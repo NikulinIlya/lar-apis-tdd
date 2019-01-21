@@ -35,12 +35,14 @@ class ProductRepo implements ProductRepoInterface
             ])->id;
         } else $imageId = $product->image_id;
 
-        return $product->update([
+        $product->update([
             'image_id' => $imageId,
             'name' => $request->name,
             'slug' => str_slug($request->name),
             'price' => $request->price
         ]);
+
+        return $product;
     }
 
     public function delete(Product $product)
