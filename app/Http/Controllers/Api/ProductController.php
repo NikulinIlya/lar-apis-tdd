@@ -8,6 +8,7 @@ use App\Http\Requests\ProductUpdateRequest;
 use App\Http\Resources\Product as ProductResource;
 use App\Http\Resources\ProductCollection;
 use App\Utopia\Repositories\Interfaces\ProductRepoInterface;
+use Illuminate\Support\Facades\DB;
 
 class ProductController extends Controller
 {
@@ -20,38 +21,65 @@ class ProductController extends Controller
 
     public function index()
     {
-        return new ProductCollection($this->productRepo->paginate());
+        try {
+            return new ProductCollection($this->productRepo->paginate());
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
     public function store(ProductStoreRequest $request)
     {
-        $product = $this->productRepo->create($request);
+        try {
+            DB::beginTransaction();
+            $product = $this->productRepo->create($request);
+            DB::commit();
 
-        return response()->json(new ProductResource($product), 201);
+            return response()->json(new ProductResource($product), 201);
+        } catch (\Exception $e) {
+            DB::rollback();
+
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
     public function show(int $id)
     {
         $product = $this->productRepo->findOrFail($id);
 
-        return response()->json(new ProductResource($product));
+        try {
+            return response()->json(new ProductResource($product));
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
     public function update(ProductUpdateRequest $request, int $id)
     {
         $product = $this->productRepo->findOrFail($id);
 
-        $product = $this->productRepo->update($request, $product);
+        try {
+            DB::beginTransaction();
+            $product = $this->productRepo->update($request, $product);
+            DB::commit();
 
-        return response()->json(new ProductResource($product));
+            return response()->json(new ProductResource($product));
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
     public function destroy(int $id)
     {
         $product = $this->productRepo->findOrFail($id);
 
-        $this->productRepo->delete($product);
-
-        return response()->json(null, 204);
+        try {
+            DB::beginTransaction();
+            $this->productRepo->delete($product);
+            DB::commit();
+            return response()->json(null, 204);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 }
