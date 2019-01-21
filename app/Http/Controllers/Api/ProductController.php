@@ -5,8 +5,6 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ProductStoreRequest;
 use App\Http\Requests\ProductUpdateRequest;
-use App\Image;
-use App\Product;
 use App\Http\Resources\Product as ProductResource;
 use App\Http\Resources\ProductCollection;
 use App\Utopia\Repositories\Interfaces\ProductRepoInterface;
@@ -22,7 +20,7 @@ class ProductController extends Controller
 
     public function index()
     {
-        return new ProductCollection(Product::paginate());
+        return new ProductCollection($this->productRepo->paginate());
     }
 
     public function store(ProductStoreRequest $request)
@@ -34,14 +32,14 @@ class ProductController extends Controller
 
     public function show(int $id)
     {
-        $product = Product::findOrFail($id);
+        $product = $this->productRepo->findOrFail($id);
 
         return response()->json(new ProductResource($product));
     }
 
     public function update(ProductUpdateRequest $request, int $id)
     {
-        $product = Product::findOrFail($id);
+        $product = $this->productRepo->findOrFail($id);
 
         $product = $this->productRepo->update($request, $product);
 
@@ -50,7 +48,7 @@ class ProductController extends Controller
 
     public function destroy(int $id)
     {
-        $product = Product::findOrFail($id);
+        $product = $this->productRepo->findOrFail($id);
 
         $this->productRepo->delete($product);
 
